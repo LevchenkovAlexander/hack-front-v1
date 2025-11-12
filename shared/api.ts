@@ -11,25 +11,38 @@ export interface DemoResponse {
   message: string;
 }
 
+// Локальное представление задачи (для UI)
 export interface Task {
-    Uid: bigint;
+    id?: string; // опциональный ID для локального хранения
     name: string;
-    deadline: string; // в формате "dd.MM.yyyy"
+    deadline?: string; // в формате "dd.MM.yyyy"
     complexityHours: number;
 }
 
+// Представление задачи для API
+export interface TaskForApi {
+    name: string;
+    deadline?: string; // в формате "dd.MM.yyyy"
+    estimatedHours: number;
+}
+
 export interface GenerateOrderRequest {
-  tasks: Task[];
-  freeHoursToday?: number;
+  Uid: string; // Uid пользователя (всегда not null)
+  tasks: TaskForApi[];
+  freeHours?: number; // свободные часы сегодня
 }
 
 export interface GenerateOrderResponse {
-  orderedTasks: Task[];
+  orderedTasks: Task[]; // возвращаются задачи в том же формате, что и локальные
   message?: string;
 }
 
-export interface SubmitTaskRequest {
-  task: Task;
+// Тело запроса для отправки задачи
+export interface SubmitTaskBody {
+  Uid: string;
+  name: string;
+  deadline?: string;
+  estimatedHours: number;
 }
 
 export interface SubmitTaskResponse {

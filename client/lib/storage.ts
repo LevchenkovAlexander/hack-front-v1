@@ -1,6 +1,43 @@
 const STORAGE_PREFIX = "mobile_task_app_v1";
 
-// Добавляем функцию для получения userId из параметров запуска
+// Тестовый Uid для разработки (временно используется вместо получения из Max API)
+const TEST_UID = "123456789";
+
+/**
+ * Получает Uid пользователя.
+ * ВАЖНО: На данный момент возвращает тестовый Uid для разработки.
+ * В будущем будет получать Uid из Max API или URL параметров.
+ * 
+ * @returns {string} Uid пользователя (всегда not null)
+ */
+export function getUid(): string {
+  // === ВРЕМЕННО ОТКЛЮЧЕНО: Получение Uid из URL параметров ===
+  // Эта логика будет включена когда Max API будет готово предоставлять Uid
+  /*
+  const launchUid = getUserIdFromLaunchParams();
+  if (launchUid) {
+    setUserId(launchUid);
+    return launchUid;
+  }
+  
+  const explicit = localStorage.getItem('user_id');
+  if (explicit) return explicit;
+  
+  // Ошибка: не удалось получить Uid
+  console.error("ОШИБКА: Не удалось получить Uid пользователя из URL параметров или localStorage.");
+  throw new Error("Uid пользователя не найден. Проверьте URL параметры или Max API.");
+  */
+  
+  // === ТЕКУЩАЯ РЕАЛИЗАЦИЯ: Возвращаем тестовый Uid ===
+  return TEST_UID;
+}
+
+/**
+ * Получает Uid из параметров запуска (URL параметры).
+ * ВАЖНО: На данный момент функция отключена, но код сохранен для будущего использования.
+ * 
+ * @returns {string | null} Uid из URL параметров или null
+ */
 export function getUserIdFromLaunchParams(): string | null {
   if (typeof window === 'undefined') return null;
   
@@ -11,30 +48,12 @@ export function getUserIdFromLaunchParams(): string | null {
   return userId;
 }
 
+/**
+ * @deprecated Используйте getUid() вместо этой функции
+ * Оставлена для обратной совместимости
+ */
 export function getUserId(): string {
-  if (typeof window === 'undefined') return 'server';
-  
-  // Сначала проверяем параметры запуска
-  const launchUserId = getUserIdFromLaunchParams();
-  if (launchUserId) {
-    // Сохраняем полученный userId для будущего использования
-    setUserId(launchUserId);
-    return launchUserId;
-  }
-  
-  // Затем проверяем явно установленный userId
-  const explicit = localStorage.getItem('user_id');
-  if (explicit) return explicit;
-  
-  // Иначе генерируем гостевой ID
-  let uuid = localStorage.getItem('user_uuid');
-  if (!uuid) {
-    uuid = `guest_${generateUuid()}`;
-    try {
-      localStorage.setItem('user_uuid', uuid);
-    } catch (e) {}
-  }
-  return uuid;
+  return getUid();
 }
 
 // Остальные функции остаются без изменений
@@ -55,7 +74,7 @@ export function setUserId(userId: string) {
 }
 
 export function getStorageKey() {
-  return `${STORAGE_PREFIX}_${getUserId()}`;
+  return `${STORAGE_PREFIX}_${getUid()}`;
 }
 
 export function loadState() {

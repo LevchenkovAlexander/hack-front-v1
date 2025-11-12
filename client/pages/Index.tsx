@@ -2,31 +2,41 @@ import { useEffect, useState } from "react";
 import DatePicker from "../components/DatePicker";
 import { Task, GenerateOrderRequest, GenerateOrderResponse } from "@shared/api";
 import { postTask, postFreeHours, postResult, generateOrderApi } from "../lib/api";
-import { loadState, saveState, setUserId, getUserIdFromLaunchParams } from "../lib/storage";
+import { loadState, saveState, getUid } from "../lib/storage";
 
 export default function Index() {
   // === USER ID ===
-  const [userId, setUserIdState] = useState<string | null>(null);
+  // Uid всегда задан (not null), получается из константы для разработки
+  const userId = getUid();
 
+  // === ВРЕМЕННО ОТКЛЮЧЕНО: Логика получения Uid из Max API ===
+  // Этот код будет включен когда Max API будет готово предоставлять Uid
+  /*
   useEffect(() => {
+    // Пытаемся получить Uid из URL параметров
     const launchUserId = getUserIdFromLaunchParams();
-    let id: string | null = null;
-
     if (launchUserId) {
-      id = launchUserId;
-      console.log("Received userId from bot:", id);
-    } else if (window.WebApp?.initDataUnsafe?.user?.id) {
-      id = String(window.WebApp.initDataUnsafe.user.id);
-      console.log("User ID from WebApp:", id);
-    } else {
-      // ТЕСТОВЫЙ USER ID ДЛЯ VERCEL
-      id = "123456789";
-      console.log("Используется ТЕСТОВЫЙ userId:", id);
+      setUserId(launchUserId);
+      setUserIdState(launchUserId);
+      console.log("Received userId from bot:", launchUserId);
+      return;
     }
-
-    setUserId(id);
-    setUserIdState(id);
+    
+    // Пытаемся получить из Max API (WebApp)
+    if (window.WebApp?.initDataUnsafe?.user?.id) {
+      const id = String(window.WebApp.initDataUnsafe.user.id);
+      setUserId(id);
+      setUserIdState(id);
+      console.log("User ID from WebApp:", id);
+      return;
+    }
+    
+    // Ошибка: не удалось получить Uid
+    console.error("ОШИБКА: Не удалось получить Uid пользователя. Проверьте URL параметры или Max API.");
   }, []);
+  */
+
+  console.log("Используется Uid:", userId);
 
   // === STATE ===
   const stored = loadState();
@@ -60,8 +70,8 @@ export default function Index() {
 
   // === GENERATE ORDER ===
   const generateOrder = async () => {
-    if (animationStage !== 'idle' || !userId) {
-      console.log("generateOrder: нет userId или анимация");
+    if (animationStage !== 'idle') {
+      console.log("generateOrder: анимация уже выполняется");
       return;
     }
 
@@ -76,7 +86,7 @@ export default function Index() {
           deadline: t.deadline,
           estimatedHours: t.complexityHours,
         })),
-        freeHours: typeof freeHours === "number" ? freeHours : undefined,
+        ...(typeof freeHours === "number" ? { freeHours } : {}),
       };
 
       console.log("POST /api/generate-order →", body);
@@ -105,7 +115,6 @@ export default function Index() {
 
   // === SUBMIT TASK ===
   const submitTask = async (task: Task) => {
-    if (!userId) return;
     console.log("submitTask:", task);
 
     try {
@@ -116,7 +125,7 @@ export default function Index() {
         estimatedHours: task.complexityHours,
       };
       const res = await postTask(body);
-      console.log("postTask response:", res.status);
+      console.log("postTask response:", res);
     } catch (e) {
       console.error("Submit task failed:", e);
     }
@@ -124,7 +133,7 @@ export default function Index() {
 
   // === SAVE FREE HOURS ===
   const saveFreeHours = async () => {
-    if (freeHours === "" || !userId) return;
+    if (freeHours === "") return;
     const hours = typeof freeHours === "number" ? freeHours : Number(freeHours);
     if (!Number.isInteger(hours) || hours < 1 || hours > 24) return;
     setSavedFreeHours(hours);
@@ -158,7 +167,6 @@ export default function Index() {
 
   // === SUBMIT RESULT ===
   const submitResult = async () => {
-    if (!userId) return;
     const num = Number(resultNumber);
     const percent = typeof resultPercent === "number" ? resultPercent : Number(resultPercent);
     if (!Number.isInteger(num) || num < 1 || !Number.isInteger(percent) || percent < 0 || percent > 100) return;

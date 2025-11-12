@@ -1,9 +1,9 @@
 // client/lib/api.ts
 
 import type {
-  Task,
   GenerateOrderRequest,
   GenerateOrderResponse,
+  SubmitTaskBody,
   SubmitTaskResponse,
 } from "@shared/api";
 
@@ -38,7 +38,7 @@ const post = async <T>(endpoint: string, body: any): Promise<T> => {
 /**
  * API функции
  */
-export const postTask = async (task: Task): Promise<SubmitTaskResponse> => {
+export const postTask = async (task: SubmitTaskBody): Promise<SubmitTaskResponse> => {
   return post<SubmitTaskResponse>("/api/task", task);
 };
 
