@@ -32,6 +32,22 @@ export default function Index() {
   const [newDeadline, setNewDeadline] = useState<string>("");
   const [newComplexity, setNewComplexity] = useState<number | "">("");
 
+  const [userId, setUserIdState] = useState<string | null>(null);
+
+  useEffect(() => {
+  const launchUserId = getUserIdFromLaunchParams();
+  if (launchUserId) {
+    console.log('Received userId from bot:', launchUserId);
+    setUserId(launchUserId); // сохраняем в localStorage
+    setUserIdState(launchUserId);
+  } else if (window.WebApp?.initDataUnsafe?.user?.id) {
+    const id = String(window.WebApp.initDataUnsafe.user.id);
+    console.log('User ID from MAX WebApp:', id);
+    setUserId(id);
+    setUserIdState(id);
+  }
+}, []);
+
   useEffect(() => {
     saveState({ tasks, orderedTasks, freeHours, savedFreeHours, resultNumber, resultPercent });
   }, [tasks, orderedTasks, freeHours, savedFreeHours, resultNumber, resultPercent]);
@@ -43,6 +59,8 @@ export default function Index() {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+
 
   const dateStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}`;
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -83,17 +101,18 @@ export default function Index() {
     }
   };
 
+
   const saveFreeHours = async () => {
-      if (freeHours === "") return;
-      const hours = typeof freeHours === "number" ? freeHours : Number(freeHours);
-      if (!Number.isInteger(hours) || hours < 1 || hours > 24) return;
-      setSavedFreeHours(hours);
-      try {
-          await postFreeHours({ freeHours: hours, Uid: userId });
-      } catch (e) {
-          console.error(e);
-      }
-      setFreeHours("");
+    if (freeHours === "" || !userId) return;
+    const hours = typeof freeHours === "number" ? freeHours : Number(freeHours);
+    if (!Number.isInteger(hours) || hours < 1 || hours > 24) return;
+    setSavedFreeHours(hours);
+    try {
+      await postFreeHours({ freeHours: hours, Uid: userId });
+    } catch (e) {
+      console.error(e);
+    }
+    setFreeHours("");
   };
 
   const addTask = async () => {
@@ -123,18 +142,19 @@ export default function Index() {
   };
 
   const submitResult = async () => {
-      const num = Number(resultNumber);
-      const percent = typeof resultPercent === "number" ? resultPercent : Number(resultPercent);
-      if (!Number.isInteger(num) || num < 1) return;
-      if (!Number.isInteger(percent) || percent < 0 || percent > 100) return;
-      const payload = { Uid: userId, number: num, percent: percent };
-      try {
-          await postResult(payload);
-      } catch (e) {
-          console.error(e);
-      }
-      setResultNumber("");
-      setResultPercent("");
+    if (!userId) return;
+    const num = Number(resultNumber);
+    const percent = typeof resultPercent === "number" ? resultPercent : Number(resultPercent);
+    if (!Number.isInteger(num) || num < 1) return;
+    if (!Number.isInteger(percent) || percent < 0 || percent > 100) return;
+    const payload = { Uid: userId, number: num, percent };
+    try {
+      await postResult(payload);
+    } catch (e) {
+      console.error(e);
+    }
+    setResultNumber("");
+    setResultPercent("");
   };
 
   const container = "max-w-md mx-auto p-4 space-y-4";
