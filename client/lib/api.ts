@@ -1,67 +1,69 @@
-export async function postTask(task: any) {
-    try {
-        const res = await fetch('/api/task', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(task),
-        });
-        
-        if (!res.ok) {
-            throw new Error('Request failed');
-        }
-        return await res.json();
-    } catch (e) {
-        console.error('Failed to post task:', e);
-        throw e;
-    }
+// client/lib/api.ts
+
+import type {
+  Task,
+  GenerateOrderRequest,
+  GenerateOrderResponse,
+  SubmitTaskResponse,
+} from "@shared/api";
+
+// Базовый URL из .env
+const API_BASE = import.meta.env.VITE_API_URL;
+
+if (!API_BASE) {
+  console.warn("VITE_API_URL не задан! Используется fallback.");
 }
 
-export async function postFreeHours(freeHoursRequest: {freeHours: number, Uid: Long}) {
-    try {
-        const res = await fetch('/api/free-hours', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(freeHoursRequest),
-        });
-        
-        if (!res.ok) {
-            throw new Error('Request failed');
-        }
-        return await res.json();
-    } catch (e) {
-        console.error('Failed to post free hours:', e);
-        throw e;
-    }
-}
+/**
+ * Универсальная функция для POST-запросов
+ */
+const post = async <T>(endpoint: string, body: any): Promise<T> => {
+  const url = `${API_BASE}${endpoint}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 
-export async function postResult(resultRequest: {Uid: Long, number: number, percent: number}) {
-    try {
-        const res = await fetch('/api/result', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(resultRequest),
-        });
-        
-        if (!res.ok) {
-            throw new Error('Request failed');
-        }
-        return await res.json();
-    } catch (e) {
-        console.error('Failed to post result:', e);
-        throw e;
-    }
-}
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`API Error ${response.status}: ${error}`);
+  }
 
-export async function generateOrderApi(generateOrderRequest: {tasks: any[], Uid: Long}) {
-    try {
-        const res = await fetch('/api/generate-order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(generateOrderRequest),
-        });
-        return res;
-    } catch (e) {
-        console.error('Failed to generate order:', e);
-        throw e;
-    }
-}
+  return response.json();
+};
+
+/**
+ * API функции
+ */
+export const postTask = async (task: Task): Promise<SubmitTaskResponse> => {
+  return post<SubmitTaskResponse>("/api/task", task);
+};
+
+export const postFreeHours = async (body: {
+  freeHours: number;
+  Uid: string;
+}): Promise<void> => {
+  await post("/api/free-hours", body);
+};
+
+export const postResult = async (body: {
+  Uid: string;
+  number: number;
+  percent: number;
+}): Promise<void> => {
+  await post("/api/result", body);
+};
+
+export const generateOrderApi = async (
+  body: GenerateOrderRequest
+): Promise<Response> => {
+  const url = `${API_BASE}/api/generate-order`;
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+};
