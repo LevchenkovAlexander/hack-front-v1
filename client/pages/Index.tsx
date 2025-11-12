@@ -10,16 +10,22 @@ export default function Index() {
 
   useEffect(() => {
     const launchUserId = getUserIdFromLaunchParams();
+    let id: string | null = null;
+
     if (launchUserId) {
-      console.log("Received userId from bot:", launchUserId);
-      setUserId(launchUserId);
-      setUserIdState(launchUserId);
+      id = launchUserId;
+      console.log("Received userId from bot:", id);
     } else if (window.WebApp?.initDataUnsafe?.user?.id) {
-      const id = String(window.WebApp.initDataUnsafe.user.id);
+      id = String(window.WebApp.initDataUnsafe.user.id);
       console.log("User ID from WebApp:", id);
-      setUserId(id);
-      setUserIdState(id);
+    } else {
+      // ТЕСТОВЫЙ USER ID ДЛЯ VERCEL
+      id = "123456789";
+      console.log("Используется ТЕСТОВЫЙ userId:", id);
     }
+
+    setUserId(id);
+    setUserIdState(id);
   }, []);
 
   // === STATE ===
@@ -54,8 +60,14 @@ export default function Index() {
 
   // === GENERATE ORDER ===
   const generateOrder = async () => {
-    if (animationStage !== 'idle' || !userId) return;
+    if (animationStage !== 'idle' || !userId) {
+      console.log("generateOrder: нет userId или анимация");
+      return;
+    }
+
+    console.log("generateOrder: отправка запроса...");
     setAnimationStage('out');
+
     setTimeout(async () => {
       const body: GenerateOrderRequest = {
         Uid: userId,
@@ -67,10 +79,17 @@ export default function Index() {
         freeHours: typeof freeHours === "number" ? freeHours : undefined,
       };
 
+      console.log("POST /api/generate-order →", body);
+
       try {
         const res = await generateOrderApi(body);
-        if (!res.ok) throw new Error("API error");
+        console.log("Ответ от сервера:", res.status, res.statusText);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const data = (await res.json()) as GenerateOrderResponse;
+        console.log("Данные от сервера:", data);
+
         if (data.orderedTasks) {
           setOrderedTasks(data.orderedTasks);
           setTasks(data.orderedTasks);
@@ -78,7 +97,7 @@ export default function Index() {
           setTimeout(() => setAnimationStage('idle'), 350);
         }
       } catch (e) {
-        console.error("Generate order failed:", e);
+        console.error("Ошибка generateOrder:", e);
         setAnimationStage('idle');
       }
     }, 250);
@@ -87,6 +106,8 @@ export default function Index() {
   // === SUBMIT TASK ===
   const submitTask = async (task: Task) => {
     if (!userId) return;
+    console.log("submitTask:", task);
+
     try {
       const body = {
         Uid: userId,
@@ -95,12 +116,7 @@ export default function Index() {
         estimatedHours: task.complexityHours,
       };
       const res = await postTask(body);
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.taskId) {
-          setTasks(prev => prev.map(t => t === task ? { ...t, id: data.taskId } : t));
-        }
-      }
+      console.log("postTask response:", res.status);
     } catch (e) {
       console.error("Submit task failed:", e);
     }
@@ -112,6 +128,8 @@ export default function Index() {
     const hours = typeof freeHours === "number" ? freeHours : Number(freeHours);
     if (!Number.isInteger(hours) || hours < 1 || hours > 24) return;
     setSavedFreeHours(hours);
+    console.log("saveFreeHours:", hours);
+
     try {
       await postFreeHours({ freeHours: hours, Uid: userId });
     } catch (e) {
@@ -145,6 +163,7 @@ export default function Index() {
     const percent = typeof resultPercent === "number" ? resultPercent : Number(resultPercent);
     if (!Number.isInteger(num) || num < 1 || !Number.isInteger(percent) || percent < 0 || percent > 100) return;
 
+    console.log("submitResult:", { num, percent });
     try {
       await postResult({ Uid: userId, number: num, percent });
       setResultNumber("");
