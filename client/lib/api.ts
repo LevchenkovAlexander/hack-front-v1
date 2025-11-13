@@ -104,12 +104,12 @@ const get = async <T>(endpoint: string): Promise<T> => {
  */
 
 // === Инициализация пользователя ===
-export const initializeUser = async (userId: bigint): Promise<string> => {
+export const initializeUser = async (userId: string): Promise<string> => {
   return get<string>(`/api/start/${userId.toString()}`);
 };
 
 // === Получить информацию о пользователе ===
-export const getUser = async (userId: bigint): Promise<{
+export const getUser = async (userId: string): Promise<{
   id: number;
   username: string | null;
   freeTime: number | null;
@@ -120,7 +120,7 @@ export const getUser = async (userId: bigint): Promise<{
 };
 
 // === Получить задачи пользователя ===
-export const getUserTasks = async (userId: bigint): Promise<Task[]> => {
+export const getUserTasks = async (userId: string): Promise<Task[]> => {
   return get<Task[]>(`/api/user/${userId.toString()}/tasks`);
 };
 
@@ -132,14 +132,14 @@ export const postTask = async (task: SubmitTaskBody): Promise<SubmitTaskResponse
 // === Сохранить свободные часы ===
 export const postFreeHours = async (body: {
   freeHours: number;
-  Uid: bigint;
+  Uid: string;
 }): Promise<void> => {
   await post("/api/free-hours", body);
 };
 
 // === Обновить результат задачи ===
 export const postResult = async (body: {
-  Uid: bigint;
+  Uid: string;
   number: number;
   percent: number;
 }): Promise<void> => {

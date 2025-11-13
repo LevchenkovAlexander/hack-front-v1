@@ -1,16 +1,16 @@
 const STORAGE_PREFIX = "mobile_task_app_v1";
 
 // Тестовый Uid для разработки (временно используется вместо получения из Max API)
-const TEST_UID = BigInt("123456789");
+const TEST_UID = "123456789";
 
 /**
  * Получает Uid пользователя.
  * ВАЖНО: На данный момент возвращает тестовый Uid для разработки.
  * В будущем будет получать Uid из Max API или URL параметров.
  * 
- * @returns {bigint} Uid пользователя (всегда not null)
+ * @returns {string} Uid пользователя (всегда not null)
  */
-export function getUid(): bigint {
+export function getUid(): string {
   // === ВРЕМЕННО ОТКЛЮЧЕНО: Получение Uid из URL параметров ===
   // Эта логика будет включена когда Max API будет готово предоставлять Uid
   /*
@@ -36,35 +36,35 @@ export function getUid(): bigint {
  * Получает Uid из параметров запуска (URL параметры).
  * ВАЖНО: На данный момент функция отключена, но код сохранен для будущего использования.
  * 
- * @returns {bigint | null} Uid из URL параметров или null
+ * @returns {string | null} Uid из URL параметров или null
  */
-export function getUserIdFromLaunchParams(): bigint | null {
+export function getUserIdFromLaunchParams(): string | null {
   if (typeof window === 'undefined') return null;
   
   // Пытаемся получить userId из URL параметров (переданных ботом)
   const urlParams = new URLSearchParams(window.location.search);
   const userId = urlParams.get('userId') || urlParams.get('user_id');
   
-  return userId ? BigInt(userId) : null;
+  return userId ? userId : null;
 }
 
 /**
  * @deprecated Используйте getUid() вместо этой функции
  * Оставлена для обратной совместимости
  */
-export function getUserId(): bigint {
+export function getUserId(): string {
   return getUid();
 }
 
 // Остальные функции остаются без изменений
-export function setUserId(userId: bigint) {
+export function setUserId(userId: string) {
   if (typeof window === 'undefined') return;
   if (!userId) return;
   try {
     const prevKey = getStorageKey();
     const prevRaw = localStorage.getItem(prevKey);
-    localStorage.setItem('user_id', userId.toString());
-    const newKey = `${STORAGE_PREFIX}_${userId.toString()}`;
+    localStorage.setItem('user_id', userId);
+    const newKey = `${STORAGE_PREFIX}_${userId}`;
     if (prevRaw && !localStorage.getItem(newKey)) {
       localStorage.setItem(newKey, prevRaw);
     }
@@ -74,7 +74,7 @@ export function setUserId(userId: bigint) {
 }
 
 export function getStorageKey() {
-  return `${STORAGE_PREFIX}_${getUid().toString()}`;
+  return `${STORAGE_PREFIX}_${getUid()}`;
 }
 
 export function loadState() {
