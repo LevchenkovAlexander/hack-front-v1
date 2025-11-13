@@ -66,7 +66,7 @@ const post = async <T>(endpoint: string, body: any): Promise<T> => {
       ...LOCALTONET_HEADER,
     },
     body: JSON.stringify(body, (_key, value) =>
-      typeof value === "bigint" ? value.toString() : value
+      typeof value === "bigint" ? Number(value) : value
     ),
   });
 
@@ -161,7 +161,7 @@ export const generateOrderApi = async (
         "localtonet-skip-warning": "true", // ← ОБЯЗАТЕЛЬНО!
       },
       body: JSON.stringify(body, (_key, value) =>
-        typeof value === "bigint" ? value.toString() : value
+        typeof value === "bigint" ? Number(value) : value
       ),
     });
     return response;
