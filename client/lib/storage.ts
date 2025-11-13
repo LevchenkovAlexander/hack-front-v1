@@ -1,7 +1,7 @@
 const STORAGE_PREFIX = "mobile_task_app_v1";
 
 // Тестовый Uid для разработки (временно используется вместо получения из Max API)
-const TEST_UID = 123456789n;
+const TEST_UID = BigInt("123456789");
 
 /**
  * Получает Uid пользователя.
