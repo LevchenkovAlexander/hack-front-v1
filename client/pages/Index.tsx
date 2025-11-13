@@ -245,7 +245,7 @@ export default function Index() {
                 orderedTasks.map((t, i) => {
                   const title = t.name || 'Без названия';
                   const dl = t.deadline || '-';
-                  const complexity = (t as any).complexity || (typeof t.complexityHours === 'number' ? String(t.complexityHours) : (typeof t.hours === 'number' ? String(t.hours) : '-'));
+                  const complexity = (t as any).complexity || (typeof t.complexityHours === 'number' ? String(t.complexityHours) : (typeof t.complexityHours === 'number' ? String(t.complexityHours) : '-'));
                   return (
                     <li key={t.id ?? i} className="py-2 text-base sm:text-lg" style={{ display: "flex", marginRight: "auto", flexDirection: "row", padding: "6px 0", alignItems: 'flex-start' }}>
                       <div style={{ fontFamily: "Roboto, Inter, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial", width: 24, fontWeight: 600 }}>{i + 1}</div>
