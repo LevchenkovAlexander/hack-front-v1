@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ks4extydw.localto.net/api/:path*"
+      "destination": "https://d5axrvjae.localto.net/api/:path*"
     },
     {
       "source": "/(.*)",
