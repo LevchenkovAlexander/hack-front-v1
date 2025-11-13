@@ -27,7 +27,7 @@ export interface TaskForApi {
 }
 
 export interface GenerateOrderRequest {
-  Uid: string; // Uid пользователя (всегда not null)
+  Uid: bigint; // Uid пользователя (всегда not null)
   tasks: TaskForApi[];
   freeHours?: number; // свободные часы сегодня
 }
@@ -39,7 +39,7 @@ export interface GenerateOrderResponse {
 
 // Тело запроса для отправки задачи
 export interface SubmitTaskBody {
-  Uid: string;
+  Uid: bigint;
   name: string;
   deadline?: string;
   estimatedHours: number;

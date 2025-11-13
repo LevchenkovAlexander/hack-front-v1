@@ -65,7 +65,9 @@ const post = async <T>(endpoint: string, body: any): Promise<T> => {
       "Content-Type": "application/json",
       ...LOCALTONET_HEADER,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body, (_key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    ),
   });
 
   if (!response.ok) {
@@ -102,24 +104,24 @@ const get = async <T>(endpoint: string): Promise<T> => {
  */
 
 // === Инициализация пользователя ===
-export const initializeUser = async (userId: string): Promise<string> => {
-  return get<string>(`/api/start/${userId}`);
+export const initializeUser = async (userId: bigint): Promise<string> => {
+  return get<string>(`/api/start/${userId.toString()}`);
 };
 
 // === Получить информацию о пользователе ===
-export const getUser = async (userId: string): Promise<{
+export const getUser = async (userId: bigint): Promise<{
   id: number;
   username: string | null;
   freeTime: number | null;
 }> => {
   return get<{ id: number; username: string | null; freeTime: number | null }>(
-    `/api/user/${userId}`
+    `/api/user/${userId.toString()}`
   );
 };
 
 // === Получить задачи пользователя ===
-export const getUserTasks = async (userId: string): Promise<Task[]> => {
-  return get<Task[]>(`/api/user/${userId}/tasks`);
+export const getUserTasks = async (userId: bigint): Promise<Task[]> => {
+  return get<Task[]>(`/api/user/${userId.toString()}/tasks`);
 };
 
 // === Добавить задачу ===
@@ -130,14 +132,14 @@ export const postTask = async (task: SubmitTaskBody): Promise<SubmitTaskResponse
 // === Сохранить свободные часы ===
 export const postFreeHours = async (body: {
   freeHours: number;
-  Uid: string;
+  Uid: bigint;
 }): Promise<void> => {
   await post("/api/free-hours", body);
 };
 
 // === Обновить результат задачи ===
 export const postResult = async (body: {
-  Uid: string;
+  Uid: bigint;
   number: number;
   percent: number;
 }): Promise<void> => {
@@ -158,7 +160,9 @@ export const generateOrderApi = async (
         "Content-Type": "application/json",
         "localtonet-skip-warning": "true", // ← ОБЯЗАТЕЛЬНО!
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body, (_key, value) =>
+        typeof value === "bigint" ? value.toString() : value
+      ),
     });
     return response;
   } catch (error) {
