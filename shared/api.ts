@@ -16,7 +16,7 @@ export interface Task {
     id?: string; // опциональный ID для локального хранения
     name: string;
     deadline?: string; // в формате "dd.MM.yyyy"
-    complexityHours: number;
+    estimatedHours: number;
 }
 
 // Представление задачи для API

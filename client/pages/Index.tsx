@@ -84,7 +84,7 @@ export default function Index() {
         tasks: tasks.map(t => ({
           name: t.name,
           deadline: t.deadline,
-          estimatedHours: t.complexityHours,
+          estimatedHours: t.estimatedHours,
         })),
         ...(typeof freeHours === "number" ? { freeHours } : {}),
       };
@@ -122,7 +122,7 @@ export default function Index() {
         Uid: userId,
         name: task.name,
         deadline: task.deadline,
-        estimatedHours: task.complexityHours,
+        estimatedHours: task.estimatedHours,
       };
       const res = await postTask(body);
       console.log("postTask response:", res);
@@ -156,7 +156,7 @@ export default function Index() {
       id: `${Date.now()}`,
       name: newName,
       deadline: newDeadline || undefined,
-      complexityHours: complexity,
+      estimatedHours: complexity,
     };
     setTasks(p => [...p, t]);
     setNewName("");
@@ -245,7 +245,7 @@ export default function Index() {
                 orderedTasks.map((t, i) => {
                   const title = t.name || 'Без названия';
                   const dl = t.deadline || '-';
-                  const complexity = (t as any).complexity || (typeof t.complexityHours === 'number' ? String(t.complexityHours) : (typeof t.complexityHours === 'number' ? String(t.complexityHours) : '-'));
+                  const complexity = typeof t.estimatedHours === 'number' ? String(t.estimatedHours) : '-';;
                   return (
                     <li key={t.id ?? i} className="py-2 text-base sm:text-lg" style={{ display: "flex", marginRight: "auto", flexDirection: "row", padding: "6px 0", alignItems: 'flex-start' }}>
                       <div style={{ fontFamily: "Roboto, Inter, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial", width: 24, fontWeight: 600 }}>{i + 1}</div>
