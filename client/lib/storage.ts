@@ -23,11 +23,11 @@ export function getUid(): string {
   if (explicit) return explicit;
   
   // // Ошибка: не удалось получить Uid
-  // console.error("ОШИБКА: Не удалось получить Uid пользователя из URL параметров или localStorage.");
-  // throw new Error("Uid пользователя не найден. Проверьте URL параметры или Max API.");
+  console.error("ОШИБКА: Не удалось получить Uid пользователя из URL параметров или localStorage.");
+  throw new Error("Uid пользователя не найден. Проверьте URL параметры или Max API.");
   
   // === ТЕКУЩАЯ РЕАЛИЗАЦИЯ: Возвращаем тестовый Uid ===
-  return TEST_UID;
+  // return TEST_UID;
 }
 
 /**
