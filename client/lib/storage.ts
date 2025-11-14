@@ -13,14 +13,14 @@ const TEST_UID = "123456789";
 export function getUid(): string {
   // === ВРЕМЕННО ОТКЛЮЧЕНО: Получение Uid из URL параметров ===
   // Эта логика будет включена когда Max API будет готово предоставлять Uid
-  // const launchUid = getUserIdFromLaunchParams();
-  // if (launchUid) {
-  //   setUserId(launchUid);
-  //   return launchUid;
-  // }
+  const launchUid = getUserIdFromLaunchParams();
+  if (launchUid) {
+    setUserId(launchUid);
+    return launchUid;
+  }
   
-  // const explicit = localStorage.getItem('user_id');
-  // if (explicit) return explicit;
+  const explicit = localStorage.getItem('user_id');
+  if (explicit) return explicit;
   
   // // Ошибка: не удалось получить Uid
   // console.error("ОШИБКА: Не удалось получить Uid пользователя из URL параметров или localStorage.");
