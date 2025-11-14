@@ -1,100 +1,116 @@
+// storage.ts
 const STORAGE_PREFIX = "mobile_task_app_v1";
+const USER_ID_KEY = "max_user_id";
 
-// Тестовый Uid для разработки (временно используется вместо получения из Max API)
-const TEST_UID = "123456789";
-
-/**
- * Получает Uid пользователя.
- * ВАЖНО: На данный момент возвращает тестовый Uid для разработки.
- * В будущем будет получать Uid из Max API или URL параметров.
- * 
- * @returns {string} Uid пользователя (всегда not null)
- */
-export function getUid(): string {
-  // === ВРЕМЕННО ОТКЛЮЧЕНО: Получение Uid из URL параметров ===
-  // Эта логика будет включена когда Max API будет готово предоставлять Uid
-  const launchUid = getUserIdFromLaunchParams();
-  if (launchUid) {
-    setUserId(launchUid);
-    return launchUid;
+// === ТИПЫ ДЛЯ MAX WebApp (обязательно!) ===
+declare global {
+  interface Window {
+    WebApp?: {
+      initDataUnsafe?: {
+        user?: {
+          id?: number;
+          first_name?: string;
+          last_name?: string;
+          username?: string;
+        };
+      };
+      ready?: () => void;
+    };
   }
-  
-  const explicit = localStorage.getItem('user_id');
-  if (explicit) return explicit;
-  
-  // // Ошибка: не удалось получить Uid
-  console.error("ОШИБКА: Не удалось получить Uid пользователя из URL параметров или localStorage.");
-  throw new Error("Uid пользователя не найден. Проверьте URL параметры или Max API.");
-  
-  // === ТЕКУЩАЯ РЕАЛИЗАЦИЯ: Возвращаем тестовый Uid ===
-  // return TEST_UID;
 }
 
-/**
- * Получает Uid из параметров запуска (URL параметры).
- * ВАЖНО: На данный момент функция отключена, но код сохранен для будущего использования.
- * 
- * @returns {string | null} Uid из URL параметров или null
- */
-export function getUserIdFromLaunchParams(): string | null {
-  if (typeof window === 'undefined') return null;
-  
-  // Пытаемся получить userId из URL параметров (переданных ботом)
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('userId') || urlParams.get('user_id');
-  
-  return userId ? userId : null;
+// === 1. ГЕНЕРАЦИЯ UID ДЛЯ РАЗРАБОТКИ ===
+function generateDevUid(): string {
+  return `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-/**
- * @deprecated Используйте getUid() вместо этой функции
- * Оставлена для обратной совместимости
- */
-export function getUserId(): string {
-  return getUid();
-}
-
-// Остальные функции остаются без изменений
-export function setUserId(userId: string) {
-  if (typeof window === 'undefined') return;
-  if (!userId) return;
+// === 2. РАБОТА С UID В localStorage ===
+function saveUserIdToStorage(newUid: string): void {
   try {
-    const prevKey = getStorageKey();
-    const prevRaw = localStorage.getItem(prevKey);
-    localStorage.setItem('user_id', userId);
-    const newKey = `${STORAGE_PREFIX}_${userId}`;
-    if (prevRaw && !localStorage.getItem(newKey)) {
-      localStorage.setItem(newKey, prevRaw);
+    const prevUid = localStorage.getItem(USER_ID_KEY);
+
+    // Миграция данных при смене пользователя на одном устройстве
+    if (prevUid && prevUid !== newUid) {
+      const oldKey = `${STORAGE_PREFIX}_${prevUid}`;
+      const newKey = `${STORAGE_PREFIX}_${newUid}`;
+      const data = localStorage.getItem(oldKey);
+
+      if (data && !localStorage.getItem(newKey)) {
+        localStorage.setItem(newKey, data);
+        console.log(`Миграция данных: ${oldKey} → ${newKey}`);
+      }
     }
+
+    localStorage.setItem(USER_ID_KEY, newUid);
   } catch (e) {
-    console.error('setUserId error', e);
+    console.error("Ошибка сохранения UID", e);
   }
 }
 
-export function getStorageKey() {
+function loadUserIdFromStorage(): string | null {
+  try {
+    return localStorage.getItem(USER_ID_KEY);
+  } catch (e) {
+    return null;
+  }
+}
+
+// === 3. ГЛАВНАЯ ФУНКЦИЯ: getUid() ===
+export function getUid(): string {
+  // 1. Из MAX WebApp
+  if (typeof window !== "undefined" && window.WebApp?.initDataUnsafe?.user?.id) {
+    const uid = window.WebApp.initDataUnsafe.user.id.toString();
+    saveUserIdToStorage(uid);
+    return uid;
+  }
+
+  // 2. Из localStorage
+  const saved = loadUserIdFromStorage();
+  if (saved) return saved;
+}
+
+// === 4. КЛЮЧ ДЛЯ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ===
+export function getStorageKey(): string {
   return `${STORAGE_PREFIX}_${getUid()}`;
 }
 
-export function loadState() {
+// === 5. СОХРАНЕНИЕ И ЗАГРУЗКА СОСТОЯНИЯ ===
+export function loadState(): any {
   try {
     const raw = localStorage.getItem(getStorageKey());
     if (!raw) return {};
     return JSON.parse(raw);
   } catch (e) {
+    console.error("Ошибка загрузки состояния", e);
     return {};
   }
 }
 
-export function saveState(state: any) {
+export function saveState(state: any): void {
   try {
     localStorage.setItem(getStorageKey(), JSON.stringify(state));
-  } catch (e) {}
+  } catch (e) {
+    console.error("Ошибка сохранения состояния", e);
+  }
 }
 
-// function generateUuid() {
-//   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-//     const r = (Math.random() * 16) | 0;
-//     const v = c === 'x' ? r : (r & 0x3) | 0x8;
-//     return v.toString(16);
-//   });
-// }
+// === 6. Принудительная установка UID ===
+export function setUserId(userId: string): void {
+  if (typeof window === "undefined" || !userId) return;
+  saveUserIdToStorage(userId);
+}
+
+// === 7. Устаревшая функция (для совместимости) ===
+export function getUserId(): string {
+  return getUid();
+}
+
+// === 8. (Опционально) Очистка данных текущего пользователя ===
+export function clearState(): void {
+  try {
+    localStorage.removeItem(getStorageKey());
+    console.log("Данные пользователя очищены");
+  } catch (e) {
+    console.error("Ошибка очистки", e);
+  }
+}
