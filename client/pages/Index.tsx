@@ -36,7 +36,7 @@ export default function Index() {
   }, []);
   */
 
-  console.log("Используется Uid:", userId);
+  // console.log("Используется Uid:", userId);
 
   // === STATE ===
   const stored = loadState();
@@ -173,7 +173,7 @@ export default function Index() {
 
     console.log("submitResult:", { num, percent });
     try {
-      await postResult({ Uid: userId, number: num, percent });
+      await postResult({ Uid: userId, number: num, percent: percent });
       setResultNumber("");
       setResultPercent("");
     } catch (e) {
